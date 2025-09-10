@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* Card styling */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Typography */
+        h1 {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-size: 28px;
+        }
+        
+        .stat {
+            font-size: 42px;
+            font-weight: 300;
+            color: #4a5568;
+            margin: 20px 0;
+        }
+        
+        .stat span {
+            font-weight: 500;
+            color: #4299e1;
+        }
+        
+        /* Form elements */
+        #password-form {
+            margin-top: 20px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            outline: none;
+        }
+        
+        input[type="password"]:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+        
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+        
+        /* Footer */
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+        }
+        
+        /* Error message */
+        .error {
+            color: #e53e3e;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        /* Loading animation */
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(66, 153, 225, 0.3);
+            border-radius: 50%;
+            border-top-color: #4299e1;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .card {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .stat {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Portfolio Dashboard</h1>
+        
+        <!-- Password Form (initially shown) -->
+        <div id="password-form">
+            <div class="input-group">
+                <input type="password" id="password-input" placeholder="Enter dashboard password" autocomplete="off">
+            </div>
+            <button id="submit-password">Access Dashboard</button>
+            <p class="error" id="error-message">Access Denied. Please try again.</p>
+        </div>
+        
+        <!-- Dashboard Content (initially hidden) -->
+        <div id="dashboard-content" style="display: none;">
+            <div class="stat">Total Visits: <span id="visit-count">--</span></div>
+        </div>
+    </div>
+    
+    <footer>
+        Private Dashboard – Kunal
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configuration - REPLACE THESE VALUES
+            const CORRECT_PASSWORD = "#Mflica2025kps@"; // Change to your desired password
+            const COUNTAPI_URL = "https://api.countapi.xyz/get/kunal-portfolio/main-site"; // Replace with your namespace/key
+            
+            // DOM Elements
+            const passwordForm = document.getElementById('password-form');
+            const passwordInput = document.getElementById('password-input');
+            const submitButton = document.getElementById('submit-password');
+            const errorMessage = document.getElementById('error-message');
+            const dashboardContent = document.getElementById('dashboard-content');
+            const visitCountElement = document.getElementById('visit-count');
+            
+            // Password validation
+            submitButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (passwordInput.value === CORRECT_PASSWORD) {
+                    // Password is correct - show dashboard
+                    passwordForm.style.display = 'none';
+                    dashboardContent.style.display = 'block';
+                    errorMessage.style.display = 'none';
+                    
+                    // Fetch visit count from CountAPI
+                    fetchVisitCount();
+                } else {
+                    // Password is incorrect - show error
+                    errorMessage.style.display = 'block';
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            });
+            
+            // Allow submitting with Enter key
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitButton.click();
+                }
+            });
+            
+            // Fetch visit count from CountAPI
+            async function fetchVisitCount() {
+                try {
+                    visitCountElement.innerHTML = 'Loading <span class="loader"></span>';
+                    
+                    const response = await fetch(COUNTAPI_URL);
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data && typeof data.value === 'number') {
+                        visitCountElement.textContent = data.value.toLocaleString();
+                    } else {
+                        throw new Error('Invalid response format');
+                    }
+                } catch (error) {
+                    console.error('Error fetching visit count:', error);
+                    visitCountElement.textContent = 'Error';
+                    
+                    // Optional: Retry after 5 seconds
+                    setTimeout(fetchVisitCount, 5000);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
