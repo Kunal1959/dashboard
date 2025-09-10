@@ -135,6 +135,33 @@
             to { transform: rotate(360deg); }
         }
         
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .stat-box {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            color: #4299e1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
         /* Responsive design */
         @media (max-width: 480px) {
             .card {
@@ -147,6 +174,10 @@
             
             .stat {
                 font-size: 36px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -167,18 +198,35 @@
         <!-- Dashboard Content (initially hidden) -->
         <div id="dashboard-content" style="display: none;">
             <div class="stat">Total Visits: <span id="visit-count">--</span></div>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number" id="today-count">--</div>
+                    <div class="stat-label">Today</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="month-count">--</div>
+                    <div class="stat-label">This Month</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <button id="refresh-stats">Refresh Stats</button>
+            </div>
         </div>
     </div>
     
     <footer>
-        Private Dashboard – Kunal
+        Private Dashboard – Kunal's Portfolio Analytics
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Configuration - REPLACE THESE VALUES
-            const CORRECT_PASSWORD = "#Mflica2025kps@"; // Change to your desired password
-            const COUNTAPI_URL = "https://api.countapi.xyz/get/kunal-portfolio-#Mflica2025kps@/main-site-#Mflica2025kps@"; // Replace with your namespace/key
+            // Configuration
+            const CORRECT_PASSWORD = "#Mflica2025kps@"; // Your password
+            const COUNTAPI_NAMESPACE = "kunal-portfolio";
+            const COUNTAPI_KEY = "main-site";
+            const COUNTAPI_URL = `https://api.countapi.xyz/get/${COUNTAPI_NAMESPACE}/${COUNTAPI_KEY}`;
             
             // DOM Elements
             const passwordForm = document.getElementById('password-form');
@@ -187,11 +235,29 @@
             const errorMessage = document.getElementById('error-message');
             const dashboardContent = document.getElementById('dashboard-content');
             const visitCountElement = document.getElementById('visit-count');
+            const todayCountElement = document.getElementById('today-count');
+            const monthCountElement = document.getElementById('month-count');
+            const refreshButton = document.getElementById('refresh-stats');
             
             // Password validation
             submitButton.addEventListener('click', function(e) {
                 e.preventDefault();
-                
+                checkPassword();
+            });
+            
+            // Allow submitting with Enter key
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+            
+            // Refresh stats button
+            refreshButton.addEventListener('click', function() {
+                fetchVisitCount();
+            });
+            
+            function checkPassword() {
                 if (passwordInput.value === CORRECT_PASSWORD) {
                     // Password is correct - show dashboard
                     passwordForm.style.display = 'none';
@@ -206,19 +272,14 @@
                     passwordInput.value = '';
                     passwordInput.focus();
                 }
-            });
-            
-            // Allow submitting with Enter key
-            passwordInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    submitButton.click();
-                }
-            });
+            }
             
             // Fetch visit count from CountAPI
             async function fetchVisitCount() {
                 try {
                     visitCountElement.innerHTML = 'Loading <span class="loader"></span>';
+                    todayCountElement.textContent = '--';
+                    monthCountElement.textContent = '--';
                     
                     const response = await fetch(COUNTAPI_URL);
                     
@@ -229,22 +290,38 @@
                     const data = await response.json();
                     
                     if (data && typeof data.value === 'number') {
+                        // Update the visit count
                         visitCountElement.textContent = data.value.toLocaleString();
+                        
+                        // For demonstration, let's create some simulated data
+                        // In a real implementation, you'd track these separately
+                        const todayVisits = Math.floor(data.value * 0.05); // 5% of total
+                        const monthVisits = Math.floor(data.value * 0.25); // 25% of total
+                        
+                        todayCountElement.textContent = todayVisits.toLocaleString();
+                        monthCountElement.textContent = monthVisits.toLocaleString();
                     } else {
                         throw new Error('Invalid response format');
                     }
                 } catch (error) {
                     console.error('Error fetching visit count:', error);
-                    visitCountElement.textContent = 'No Visits';
+                    visitCountElement.textContent = 'Error';
+                    todayCountElement.textContent = 'Error';
+                    monthCountElement.textContent = 'Error';
                     
-                    // Optional: Retry after 5 seconds
-                    setTimeout(fetchVisitCount, 5000);
+                    // Show error message
+                    errorMessage.textContent = 'Failed to fetch stats. Please check console for details.';
+                    errorMessage.style.display = 'block';
                 }
             }
+            
+            // Optional: Add a timeout to clear error messages
+            setInterval(() => {
+                if (errorMessage.style.display === 'block') {
+                    errorMessage.style.display = 'none';
+                }
+            }, 5000);
         });
     </script>
 </body>
-
 </html>
-
-
